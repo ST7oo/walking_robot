@@ -1,6 +1,19 @@
 <h1>
-  Reinforcement Learning
+  Walking Robot
 </h1>
+<label>Initial state</label>
+<input [(ngModel)]="initial_state">
+<button (click)="simulate(false)">Start</button>
+<button (click)="simulate(true)">Random</button>
 <p>
   <strong>Discount factor:</strong> {{discount_factor}}
 </p>
+<b>Policy: </b>
+<pre>{{policy}}</pre>
+<div>
+  <b>Steps: </b>
+</div>
+<div *ngFor="let step of steps" style="float: left; width: 90px;">
+  <span>{{step}}</span>
+  <img src="img/step{{step}}.png">
+</div>
