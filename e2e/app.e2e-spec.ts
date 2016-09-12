@@ -1,14 +1,15 @@
-import { RLPage } from './app.po';
 
-describe('rl App', function() {
-  let page: RLPage;
+describe('QuickStart E2E Tests', function () {
 
-  beforeEach(() => {
-    page = new RLPage();
+  let expectedMsg = 'My First Angular 2 App';
+
+
+  beforeEach(function () {
+    browser.get('');
   });
 
-  it('should display message saying app works', () => {
-    page.navigateTo();
-    expect(page.getParagraphText()).toEqual('app works!');
+  it('should display: ' + expectedMsg, function () {
+    expect(element(by.css('h1')).getText()).toEqual(expectedMsg);
   });
+
 });
