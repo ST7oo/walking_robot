@@ -1,0 +1,37 @@
+<div class="container">
+  <h1>
+    Walking Robot
+  </h1>
+  <label>Initial state</label>
+  <input [(ngModel)]="initial_state">
+  <button class="btn btn-secondary" (click)="simulate(false)">Start</button>
+  <button class="btn btn-primary" (click)="simulate(true)">Random</button>
+  <p>
+    <strong>Discount factor:</strong> {{discount_factor}}
+  </p>
+  <label *ngIf="calculatingV">Calculating...</label>
+  <div *ngIf="!calculatingV">
+    <b>Policy with V: </b>
+    <pre>{{policyV}}</pre>
+    <div>
+      <b>Steps: </b>
+    </div>
+    <div *ngFor="let step of steps1" style="float: left; width: 90px;">
+      <span>{{step}}</span>
+      <img src="app/img/step{{step}}.png">
+    </div>
+  </div>
+  <br>
+  <label *ngIf="calculatingQ">Calculating...</label>
+  <div *ngIf="!calculatingQ" style="clear: both">
+    <b>Policy with Q: </b>
+    <pre>{{policyQ}}</pre>
+    <div>
+      <b>Steps: </b>
+    </div>
+    <div *ngFor="let step of steps2" style="float: left; width: 90px;">
+      <span>{{step}}</span>
+      <img src="app/img/step{{step}}.png">
+    </div>
+  </div>
+</div>
