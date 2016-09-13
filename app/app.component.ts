@@ -1,13 +1,18 @@
 import { Component } from '@angular/core';
+import * as math from 'mathjs';
 
 @Component({
-    selector: 'my-app',
-    templateUrl: 'app/app.component.html'
+	selector: 'my-app',
+	templateUrl: 'app/app.component.html'
 })
 export class AppComponent {
 	calculatingV = true;
   calculatingQ = true;
+  calculatingQlearning = true;
+  calculatingQlearning_greedy = true;
   discount_factor: number = 0.5;
+	learning_rate: number = 0.1;
+	exploration_rate: number = 0.2;
   transitions = [[1, 3, 4, 12], //0
     [0, 2, 5, 13], //1
     [3, 1, 6, 14], //2
@@ -24,22 +29,6 @@ export class AppComponent {
     [12, 14, 9, 1], //13
     [15, 13, 10, 2], //14
     [14, 12, 11, 3]]; //15
-  /*rewards = [[0, -20, 0, -20], //0
-   [0, 0, -10, -10], //1
-   [0, 0, -10, -10], //2
-   [0, -10, 0, -10], //3
-   [-10, -10, 0, 0], //4
-   [-5, -10, -5, -10], //5
-   [-5, -10, -5, -10], //6
-   [-10, 10, 0, 0], //7
-   [-10, -10, 0, 0], //8
-   [-5, -10, -5, -10], //9
-   [-5, -10, -5, -10], //10
-   [-10, 10, 0, 0], //11
-   [0, -10, 0, -10], //12
-   [0, 0, -10, 10], //13
-   [0, 0, -10, 10], //14
-   [0, -20, 0, -20]]; //15*/
   rewards = [[0, -10, 0, -10], //0
     [0, 0, -10, -10], //1
     [0, 0, -10, -10], //2
@@ -61,25 +50,40 @@ export class AppComponent {
   initial_state: number;
   policyV: number[] = [];
   policyQ: number[] = [];
+  policyQlearning: number[] = [];
+  policyQlearning_greedy: number[] = [];
+	best_policy = [0, 1, 0, 2, 3, 2, 0, 1, 2, 2, 0, 1, 0, 3, 3, 0];
+	// best_policy = [0,1,0,2,3,0,2,3,2,2,0,1,0,3,1,0];
   num_steps = 20;
+	T = 10000;
+  steps0: number[] = [];
   steps1: number[] = [];
   steps2: number[] = [];
+  steps3: number[] = [];
+  steps4: number[] = [];
 
   ngOnInit() {
     setTimeout(() => {
-      this.policyV = this.calculate_policy(this.transitions, this.rewards, this.discount_factor);
+      this.policyV = this.calculate_policyV(this.transitions, this.rewards, this.discount_factor);
       this.calculatingV = false;
-      this.policyQ = this.calculate_policy2(this.transitions, this.rewards, this.discount_factor);
+      this.policyQ = this.calculate_policyQ(this.transitions, this.rewards, this.discount_factor);
       this.calculatingQ = false;
+      this.policyQlearning = this.calculate_Qlearning(math.randomInt(15), this.T, this.exploration_rate, this.learning_rate, this.discount_factor);
+      this.calculatingQlearning = false;
+      this.policyQlearning_greedy = this.calculate_Qlearning(math.randomInt(15), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, true);
+      this.calculatingQlearning_greedy = false;
     }, 1000);
   }
 
   simulate(random: boolean) {
     if (random) {
-      this.initial_state = Math.floor(Math.random() * (15 - 0 + 1)) + 0;
+      this.initial_state = math.randomInt(15);
     }
+    this.steps0 = this.getSteps(this.best_policy, this.transitions, this.initial_state, this.num_steps);
     this.steps1 = this.getSteps(this.policyV, this.transitions, this.initial_state, this.num_steps);
     this.steps2 = this.getSteps(this.policyQ, this.transitions, this.initial_state, this.num_steps);
+    this.steps3 = this.getSteps(this.policyQlearning, this.transitions, this.initial_state, this.num_steps);
+    this.steps4 = this.getSteps(this.policyQlearning_greedy, this.transitions, this.initial_state, this.num_steps);
   }
 
   getSteps(policy: number[], transitions: number[][], initial_state: number, num_steps: number) {
@@ -93,120 +97,88 @@ export class AppComponent {
     return steps;
   }
 
-  calculate_policy(transitions: number[][], rewards: number[][], discount_factor: number) {
-    // let V = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let V = this.randomArray(16, 3);
-    let policy: number[] = [];
-    let new_policy = this.argmax(rewards, discount_factor, V, transitions);
-    let updated = true;
+  calculate_policyV(transitions: number[][], rewards: number[][], discount_factor: number) {
+    let V = math.randomInt([16], 3);
+    let policy: number[] = Array(16);
+    let new_policy: number[] = Array(16);
+		for (let s in rewards) {
+			new_policy[s] = this.argmax(rewards[s], (a: number) => rewards[s][a] + discount_factor * V[transitions[s][a]]);
+		}
     let i = 0;
-    while (updated && i < 100) {
-      policy = new_policy;
+    while (!math.deepEqual(new_policy, policy) && i < 100) {
+      policy = math.clone(new_policy);
       for (let s in V) {
         V[s] = rewards[s][policy[s]] + discount_factor * V[transitions[s][policy[s]]];
-      }
-      new_policy = this.argmax(rewards, discount_factor, V, transitions);
-      // console.log(policy);
-      if (this.arraysEqual(new_policy, policy)) {
-        updated = false;
+				new_policy[s] = this.argmax(rewards[s], (a: number) => rewards[s][a] + discount_factor * V[transitions[s][a]]);
       }
       i++;
     }
+		console.log('V:', i);
     return new_policy;
   }
 
-  calculate_policy2(transitions: number[][], rewards: number[][], discount_factor: number) {
-    /*let Q = [[0, 0, 0, 0], //0
-      [0, 0, 0, 0], //1
-      [0, 0, 0, 0], //2
-      [0, 0, 0, 0], //3
-      [0, 0, 0, 0], //4
-      [0, 0, 0, 0], //5
-      [0, 0, 0, 0], //6
-      [0, 0, 0, 0], //7
-      [0, 0, 0, 0], //8
-      [0, 0, 0, 0], //9
-      [0, 0, 0, 0], //10
-      [0, 0, 0, 0], //11
-      [0, 0, 0, 0], //12
-      [0, 0, 0, 0], //13
-      [0, 0, 0, 0], //14
-      [0, 0, 0, 0]]; //15*/
-    let Q: number[][] = [];
-     for (let j=0; j<16; j++){
-     Q.push(this.randomArray(4, 3))
-     }
+  calculate_policyQ(transitions: number[][], rewards: number[][], discount_factor: number) {
+    let Q = math.randomInt([16, 4], 10);
     let policy: number[] = [];
-    let new_policy = this.argmax2(Q);
-    let updated = true;
+    let new_policy: number[] = Array(16);
+		for (let s in Q) {
+			new_policy[s] = this.argmax(Q[s], (a: number) => Q[s][a]);
+		}
     let i = 0;
-    while (updated && i < 100) {
-      policy = new_policy;
-      // let oldQ = Object.assign({}, Q);
+    while (!math.deepEqual(new_policy, policy) && i < 100) {
+      policy = math.clone(new_policy);
       for (let s in Q) {
         for (let a in Q[s]) {
-          Q[s][a] = rewards[s][a] + discount_factor * Math.max(...Q[transitions[s][a]]);
+          Q[s][a] = rewards[s][a] + discount_factor * math.max(Q[transitions[s][a]]);
         }
-      }
-      // console.log(oldQ);
-      console.log(Q);
-      new_policy = this.argmax2(Q);
-      console.log(policy);
-      if (this.arraysEqual(new_policy, policy)) {
-        updated = false;
+				new_policy[s] = this.argmax(Q[s], (a: number) => Q[s][a]);
       }
       i++;
     }
+		console.log('Q:', i);
     return new_policy;
   }
 
-  argmax(r: number[][], gamma: number, v: number[], delta: number[][]) {
-    let a_max = 0,
-      pi: number[] = [],
+	calculate_Qlearning(initial_state: number, T: number, exploration_rate: number, learning_rate: number, discount_factor: number, greedy = false) {
+		let action: number, new_state: number, reward: number;
+		let policy = Array(16);
+		let epsilon = exploration_rate;
+		let Q = math.randomInt([16, 4], 10);
+		let state = initial_state;
+		for (let t = 0; t < T; t++) {
+			if (!greedy && math.random() < epsilon) {
+				action = math.randomInt(3);
+			} else {
+				action = Q[state].indexOf(math.max(Q[state]));
+			}
+			epsilon = exploration_rate * (1 - t / T);
+			[new_state, reward] = this.go(state, action);
+			Q[state][action] = Q[state][action] + learning_rate * (reward + discount_factor * math.max(Q[new_state]) - Q[state][action]);
+			state = new_state;
+		}
+		for (let s in Q) {
+			policy[s] = this.argmax(Q[s], (a: number) => Q[s][a]);
+		}
+		return policy;
+	}
+
+	go(state: number, action: number) {
+		let new_state = this.transitions[state][action];
+		let reward = this.rewards[state][action];
+		return [new_state, reward];
+	}
+
+  argmax(array: number[], lamda: Function) {
+    let a_max: number,
       max: number;
-    for (let s in r) {
-      for (let a in r[s]) {
-        let tmp = r[s][a] + gamma * v[delta[s][a]];
-        if (!max || tmp > max) {
-          max = tmp;
-          a_max = parseInt(a);
-        }
-      }
-      pi[s] = a_max;
-    }
-    return pi;
+		for (let a in array) {
+			let tmp = lamda(a);
+			if (!max || tmp > max) {
+				max = tmp;
+				a_max = parseInt(a);
+			}
+		}
+    return a_max;
   }
 
-  argmax2(Q: number[][]) {
-    let a_max = 0,
-      pi: number[] = [],
-      max: number;
-    for (let s in Q) {
-      for (let a in Q[s]) {
-        let tmp = Q[s][a];
-        if (!max || tmp > max) {
-          max = tmp;
-          a_max = parseInt(a);
-        }
-      }
-      pi[s] = a_max;
-    }
-    return pi;
-  }
-
-  randomArray(length: number, max: number) {
-    return Array.apply(null, Array(length)).map(function (_: any, i: any) {
-      return Math.round(Math.random() * max);
-    });
-  }
-
-  arraysEqual(arr1: any[], arr2: any[]) {
-    if (arr1.length !== arr2.length)
-      return false;
-    for (var i = arr1.length; i--;) {
-      if (arr1[i] !== arr2[i])
-        return false;
-    }
-    return true;
-  }
- }
+}

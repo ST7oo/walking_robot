@@ -9,8 +9,21 @@
   <p>
     <strong>Discount factor:</strong> {{discount_factor}}
   </p>
+	<br>
+  <div>
+    <b>Best policy: </b>
+    <pre>{{best_policy}}</pre>
+    <div>
+      <b>Steps: </b>
+    </div>
+    <div *ngFor="let step of steps0" style="float: left; width: 90px;">
+      <span>{{step}}</span>
+      <img src="app/img/step{{step}}.png">
+    </div>
+  </div>
+  <br>
   <label *ngIf="calculatingV">Calculating...</label>
-  <div *ngIf="!calculatingV">
+  <div *ngIf="!calculatingV" style="clear: both">
     <b>Policy with V: </b>
     <pre>{{policyV}}</pre>
     <div>
@@ -30,6 +43,32 @@
       <b>Steps: </b>
     </div>
     <div *ngFor="let step of steps2" style="float: left; width: 90px;">
+      <span>{{step}}</span>
+      <img src="app/img/step{{step}}.png">
+    </div>
+  </div>
+  <br>
+  <label *ngIf="calculatingQlearning">Calculating...</label>
+  <div *ngIf="!calculatingQlearning" style="clear: both">
+    <b>Policy with Q-learning: </b>
+    <pre>{{policyQlearning}}</pre>
+    <div>
+      <b>Steps: </b>
+    </div>
+    <div *ngFor="let step of steps3" style="float: left; width: 90px;">
+      <span>{{step}}</span>
+      <img src="app/img/step{{step}}.png">
+    </div>
+  </div>
+  <br>
+  <label *ngIf="calculatingQlearning_greedy">Calculating...</label>
+  <div *ngIf="!calculatingQlearning_greedy" style="clear: both">
+    <b>Policy with Q-learning (greedy): </b>
+    <pre>{{policyQlearning_greedy}}</pre>
+    <div>
+      <b>Steps: </b>
+    </div>
+    <div *ngFor="let step of steps4" style="float: left; width: 90px;">
       <span>{{step}}</span>
       <img src="app/img/step{{step}}.png">
     </div>
