@@ -2,8 +2,8 @@
 <br>
 <div class="col-sm-5">
 	<hr>
-	<h3><a style="cursor: pointer" (click)="toggle_animation_parameters()"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_animation_parameters, 'glyphicon-collapse-up': show_animation_parameters}"></i> Animation parameters</a></h3>
-	<div [hidden]="!show_animation_parameters">
+	<h3><a style="cursor: pointer" (click)="toggle_parameters(0)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[0], 'glyphicon-collapse-up': show_parameters[0]}"></i> Animation parameters</a></h3>
+	<div [hidden]="!show_parameters[0]">
 		<div class="row">
 			<div class="col-xs-5">
 				<label>Initial state</label>
@@ -37,13 +37,13 @@
 		</div>
 		<div class="row btn_parameters">
 			<div class="col-xs-offset-5 col-xs-3">
-				<button class="btn btn-primary" (click)="simulate(false)">Start</button>
+				<button class="btn btn-success" (click)="simulate(false)">Start</button>
 			</div>
 		</div>
 	</div>
 	<hr>
-	<h3><a style="cursor: pointer" (click)="toggle_policies_parameters()"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_policies_parameters, 'glyphicon-collapse-up': show_policies_parameters}"></i> Policies parameters</a></h3>
-	<div [hidden]="!show_policies_parameters">
+	<h3><a style="cursor: pointer" (click)="toggle_parameters(1)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[1], 'glyphicon-collapse-up': show_parameters[1]}"></i> Policies parameters</a></h3>
+	<div [hidden]="!show_parameters[1]">
 		<div class="row">
 			<div class="col-xs-5">
 				<label>Discount factor</label>
@@ -80,6 +80,93 @@
 			<div class="col-xs-offset-5 col-xs-3">
 				<button class="btn btn-primary" (click)="calculate_policies()">Calculate policies</button>
 			</div>
+		</div>
+		<br>
+		<div class="panel panel-default">
+			<div class="panel-body">
+				Iterations with V: {{iterations_V}}<br>
+				Iterations with Q: {{iterations_Q}}<br>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<h3><a style="cursor: pointer" (click)="toggle_parameters(2)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[2], 'glyphicon-collapse-up': show_parameters[2]}"></i> Info</a></h3>
+	<div [hidden]="!show_parameters[2]">
+		<label>States</label>
+		<table class="table table-bordered">
+			<tr *ngFor="let row of states">
+				<td *ngFor="let col of row">
+					{{col}}<img src="app/img/step{{col}}.png" height="40">
+				</td>
+			</tr>
+		</table>
+		<br>
+		<label>Actions</label>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Action</th>
+					<th>Effect</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>0</td>
+					<td>Move right leg up or down</td>
+				</tr>
+				<tr>
+					<td>1</td>
+					<td>Move right leg back or forward</td>
+				</tr>
+				<tr>
+					<td>2</td>
+					<td>Move left leg up or down</td>
+				</tr>
+				<tr>
+					<td>3</td>
+					<td>Move left leg back or forward</td>
+				</tr>
+		</table>
+		<br>
+		<div class="col-xs-6">
+			<label>Transitions</label>
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>S\A</th>
+						<th>0</th>
+						<th>1</th>
+						<th>2</th>
+						<th>3</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let row of transitions; let i = index">
+						<td><b>{{i}}</b></td>
+						<td *ngFor="let col of row">{{col}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="col-xs-6">
+			<label>Rewards</label>
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>S\A</th>
+						<th>0</th>
+						<th>1</th>
+						<th>2</th>
+						<th>3</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let row of rewards; let i = index">
+						<td><b>{{i}}</b></td>
+						<td *ngFor="let col of row">{{col}}</td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 	</div>
 	<hr>

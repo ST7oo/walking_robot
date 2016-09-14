@@ -28,3 +28,11 @@
 	max-height: 200px;
 	overflow: auto;
 }
+
+td {
+	text-align: center;
+}
+
+th {
+	text-align: center;
+}
