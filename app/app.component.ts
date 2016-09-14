@@ -3,13 +3,13 @@ import * as math from 'mathjs';
 
 @Component({
 	selector: 'my-app',
-	templateUrl: 'app/app.component.html'
+	templateUrl: 'app/app.component.html',
+	styleUrls: ['app/css/styles.css']
 })
 export class AppComponent {
-	calculatingV = true;
-  calculatingQ = true;
-  calculatingQlearning = true;
-  calculatingQlearning_greedy = true;
+	num_policies = 5;
+	num_states = 16;
+	num_actions = 4;
   discount_factor: number = 0.5;
 	learning_rate: number = 0.1;
 	exploration_rate: number = 0.2;
@@ -46,45 +46,120 @@ export class AppComponent {
     [0, 0, -10, 10], //14
     [0, -10, 0, -10]]; //15
 
-
-  initial_state: number;
+	calculatingV = true;
+  calculatingQ = true;
+  calculatingQlearning = true;
+  calculatingQlearning_greedy = true;
+	show_animation_parameters = true;
+	show_policies_parameters = false;
+  initial_state: number = 0;
   policyV: number[] = [];
   policyQ: number[] = [];
   policyQlearning: number[] = [];
   policyQlearning_greedy: number[] = [];
 	best_policy = [0, 1, 0, 2, 3, 2, 0, 1, 2, 2, 0, 1, 0, 3, 3, 0];
-	// best_policy = [0,1,0,2,3,0,2,3,2,2,0,1,0,3,1,0];
   num_steps = 20;
+	speed = 800;
 	T = 10000;
-  steps0: number[] = [];
-  steps1: number[] = [];
-  steps2: number[] = [];
-  steps3: number[] = [];
-  steps4: number[] = [];
+  steps: Array<number>[] = Array(this.num_policies);
+	animations: any[] = Array(this.num_policies);
+	current_steps: number[] = Array(this.num_policies);
+	playing: boolean[] = Array(this.num_policies);
 
   ngOnInit() {
+		for (let i = 0; i < this.num_policies; i++) {
+			this.playing[i] = false;
+		}
     setTimeout(() => {
-      this.policyV = this.calculate_policyV(this.transitions, this.rewards, this.discount_factor);
-      this.calculatingV = false;
-      this.policyQ = this.calculate_policyQ(this.transitions, this.rewards, this.discount_factor);
-      this.calculatingQ = false;
-      this.policyQlearning = this.calculate_Qlearning(math.randomInt(15), this.T, this.exploration_rate, this.learning_rate, this.discount_factor);
-      this.calculatingQlearning = false;
-      this.policyQlearning_greedy = this.calculate_Qlearning(math.randomInt(15), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, true);
-      this.calculatingQlearning_greedy = false;
+      this.calculate_policies();
     }, 1000);
+		for (let i = 0; i < this.num_states; i++) {
+			let image = new Image();
+			image.src = `app/img/step${i}.png`;
+		}
   }
+
+	calculate_policies() {
+		this.calculatingV = true;
+		this.calculatingQ = true;
+		this.calculatingQlearning = true;
+		this.calculatingQlearning_greedy = true;
+		for (let i = 0; i < this.num_policies; i++) {
+			this.reset_animation(i);
+		}
+		this.policyV = this.calculate_policyV(this.transitions, this.rewards, this.discount_factor);
+		this.calculatingV = false;
+		this.policyQ = this.calculate_policyQ(this.transitions, this.rewards, this.discount_factor);
+		this.calculatingQ = false;
+		this.policyQlearning = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, this.exploration_rate, this.learning_rate, this.discount_factor);
+		this.calculatingQlearning = false;
+		this.policyQlearning_greedy = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, true);
+		this.calculatingQlearning_greedy = false;
+	}
 
   simulate(random: boolean) {
     if (random) {
-      this.initial_state = math.randomInt(15);
+      this.initial_state = math.randomInt(this.num_states - 1);
     }
-    this.steps0 = this.getSteps(this.best_policy, this.transitions, this.initial_state, this.num_steps);
-    this.steps1 = this.getSteps(this.policyV, this.transitions, this.initial_state, this.num_steps);
-    this.steps2 = this.getSteps(this.policyQ, this.transitions, this.initial_state, this.num_steps);
-    this.steps3 = this.getSteps(this.policyQlearning, this.transitions, this.initial_state, this.num_steps);
-    this.steps4 = this.getSteps(this.policyQlearning_greedy, this.transitions, this.initial_state, this.num_steps);
+    this.steps[0] = this.getSteps(this.best_policy, this.transitions, this.initial_state, this.num_steps);
+    this.steps[1] = this.getSteps(this.policyV, this.transitions, this.initial_state, this.num_steps);
+    this.steps[2] = this.getSteps(this.policyQ, this.transitions, this.initial_state, this.num_steps);
+    this.steps[3] = this.getSteps(this.policyQlearning, this.transitions, this.initial_state, this.num_steps);
+    this.steps[4] = this.getSteps(this.policyQlearning_greedy, this.transitions, this.initial_state, this.num_steps);
+		// animate
+		for (let i = 0; i < this.num_policies; i++) {
+			this.reset_animation(i);
+			this.play_animation(i);
+		}
   }
+
+	play_animation(num: number) {
+		clearInterval(this.animations[num]);
+		this.playing[num] = true;
+		this.animations[num] = setInterval(() => {
+			if (this.current_steps[num] == -1) {
+				this.reset_animation(num);
+				this.play_animation(num);
+			} else {
+				if (this.current_steps[num] + 1 == this.num_steps) {
+					this.current_steps[num] = -1;
+				} else {
+					this.current_steps[num]++;
+				}
+			}
+		}, this.speed);
+	}
+
+	pause_animation(num: number) {
+		clearInterval(this.animations[num]);
+		this.playing[num] = false;
+	}
+
+	reset_animation(num: number) {
+		clearInterval(this.animations[num]);
+		this.current_steps[num] = 0;
+		this.playing[num] = false;
+	}
+
+	step_forward(num: number, steps: number) {
+		if (this.current_steps[num] + steps >= this.num_steps) {
+			this.current_steps[num] = -1;
+		} else {
+			this.current_steps[num] += steps;
+		}
+	}
+
+	random_initial_state() {
+		this.initial_state = math.randomInt(this.num_states - 1);
+	}
+
+	toggle_animation_parameters() {
+		this.show_animation_parameters = !this.show_animation_parameters;
+	}
+
+	toggle_policies_parameters() {
+		this.show_policies_parameters = !this.show_policies_parameters;
+	}
 
   getSteps(policy: number[], transitions: number[][], initial_state: number, num_steps: number) {
     let steps = [initial_state];
@@ -98,9 +173,9 @@ export class AppComponent {
   }
 
   calculate_policyV(transitions: number[][], rewards: number[][], discount_factor: number) {
-    let V = math.randomInt([16], 3);
-    let policy: number[] = Array(16);
-    let new_policy: number[] = Array(16);
+    let V = math.randomInt([this.num_states], this.num_actions - 1);
+    let policy: number[] = Array(this.num_states);
+    let new_policy: number[] = Array(this.num_states);
 		for (let s in rewards) {
 			new_policy[s] = this.argmax(rewards[s], (a: number) => rewards[s][a] + discount_factor * V[transitions[s][a]]);
 		}
@@ -118,9 +193,9 @@ export class AppComponent {
   }
 
   calculate_policyQ(transitions: number[][], rewards: number[][], discount_factor: number) {
-    let Q = math.randomInt([16, 4], 10);
+    let Q = math.randomInt([this.num_states, this.num_actions], 10);
     let policy: number[] = [];
-    let new_policy: number[] = Array(16);
+    let new_policy: number[] = Array(this.num_states);
 		for (let s in Q) {
 			new_policy[s] = this.argmax(Q[s], (a: number) => Q[s][a]);
 		}
@@ -141,13 +216,13 @@ export class AppComponent {
 
 	calculate_Qlearning(initial_state: number, T: number, exploration_rate: number, learning_rate: number, discount_factor: number, greedy = false) {
 		let action: number, new_state: number, reward: number;
-		let policy = Array(16);
+		let policy = Array(this.num_states);
 		let epsilon = exploration_rate;
-		let Q = math.randomInt([16, 4], 10);
+		let Q = math.randomInt([this.num_states, this.num_actions], 10);
 		let state = initial_state;
 		for (let t = 0; t < T; t++) {
 			if (!greedy && math.random() < epsilon) {
-				action = math.randomInt(3);
+				action = math.randomInt(this.num_actions - 1);
 			} else {
 				action = Q[state].indexOf(math.max(Q[state]));
 			}
