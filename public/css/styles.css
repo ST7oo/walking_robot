@@ -36,3 +36,8 @@ td {
 th {
 	text-align: center;
 }
+
+.policies {
+	clear: both;
+	margin-bottom: 40px;
+}
