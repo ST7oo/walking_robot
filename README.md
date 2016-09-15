@@ -1,15 +1,9 @@
-## Angular2 Express slim starter
-### Heroku ready wih SystemJS builder
+# Walking Robot
 
-- Angular 2 RC.5 ( https://angular.io/docs/ts/latest/quickstart.html )
-- Express ( from generator )
-
-https://express-angular2-slim.herokuapp.com/
+Reinforcement learning
 
 ## Install
 ```bash
-git clone https://github.com/vladotesanovic/angular2-express-slim
-cd angular2-express-slim
 
 # Install dependencies
 npm install && npm run typings
@@ -21,7 +15,7 @@ npm start
 ```
 
 ## Development
-Uncomment in public/index.html:
+Uncomment in `public/index.html`:
 
 ```html
 <script src="js/systemjs.config.js"></script>
@@ -36,3 +30,9 @@ Comment out
 <!-- Production mod -->
 <script src="js/bundle.min.js"></script>
 ```
+
+After modifying code run
+```bash
+npm run bundle:prod
+```
+and comment/uncomment again in `public/index.html`

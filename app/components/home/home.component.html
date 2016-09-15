@@ -1,5 +1,342 @@
-<h2>Page: {{name}}</h2>
-
-<pre>Response from server: /users</pre>
-<pre>{{ users?.name }}</pre>
-<pre>{{ users?.last }}</pre>
+<div class="col-sm-5">
+	<hr>
+	<h3><a style="cursor: pointer" (click)="toggle_parameters(0)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[0], 'glyphicon-collapse-up': show_parameters[0]}"></i> Animation parameters</a></h3>
+	<div [hidden]="!show_parameters[0]">
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Initial state</label>
+			</div>
+			<div class="col-xs-4">
+				<input type="number" class="form-control" min="0" max="{{num_states - 1}}" [(ngModel)]="initial_state">
+			</div>
+			<div class="col-xs-3">
+				<button class="btn btn-default" (click)="random_initial_state()">Random</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Number of steps</label>
+			</div>
+			<div class="col-xs-5">
+				<input type="number" class="form-control" min="1" max="100" [(ngModel)]="num_steps">
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Speed</label>
+			</div>
+			<div class="col-xs-5">
+				<div class="input-group">
+					<span class="input-group-addon">+</span>
+					<input type="range" class="form-control" min="200" max="1400" step="600" [(ngModel)]="speed">
+					<span class="input-group-addon">-</span>
+				</div>
+			</div>
+		</div>
+		<div class="row btn_parameters">
+			<div class="col-xs-offset-5 col-xs-3">
+				<button class="btn btn-success" (click)="simulate(false)">Start</button>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<h3><a style="cursor: pointer" (click)="toggle_parameters(1)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[1], 'glyphicon-collapse-up': show_parameters[1]}"></i> Policies parameters</a></h3>
+	<div [hidden]="!show_parameters[1]">
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Discount factor</label>
+			</div>
+			<div class="col-xs-5">
+				<input type="number" class="form-control" min="0" max="1" step="0.1" [(ngModel)]="discount_factor">
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Learning rate</label>
+			</div>
+			<div class="col-xs-5">
+				<input type="number" class="form-control" min="0" max="1" step="0.1" [(ngModel)]="learning_rate">
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Exploration rate</label>
+			</div>
+			<div class="col-xs-5">
+				<input type="number" class="form-control" min="0" max="1" step="0.1" [(ngModel)]="exploration_rate">
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Iterations Q-learning</label>
+			</div>
+			<div class="col-xs-5">
+				<input type="number" class="form-control" min="1" [(ngModel)]="T">
+			</div>
+		</div>
+		<div class="row btn_parameters">
+			<div class="col-xs-offset-5 col-xs-3">
+				<button class="btn btn-primary" (click)="calculate_policies()">Calculate policies</button>
+			</div>
+		</div>
+		<br>
+		<div class="panel panel-default">
+			<div class="panel-body">
+				Iterations with V: {{iterations_V}}<br>
+				Iterations with Q: {{iterations_Q}}<br>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<h3><a style="cursor: pointer" (click)="toggle_parameters(2)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[2], 'glyphicon-collapse-up': show_parameters[2]}"></i> Task data</a></h3>
+	<div [hidden]="!show_parameters[2]">
+		<label>States</label>
+		<table class="table table-bordered">
+			<tr *ngFor="let row of states">
+				<td *ngFor="let col of row">
+					{{col}}<img src="img/step{{col}}.png" height="40">
+				</td>
+			</tr>
+		</table>
+		<br>
+		<label>Actions</label>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Action</th>
+					<th>Effect</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>0</td>
+					<td>Move right leg up or down</td>
+				</tr>
+				<tr>
+					<td>1</td>
+					<td>Move right leg back or forward</td>
+				</tr>
+				<tr>
+					<td>2</td>
+					<td>Move left leg up or down</td>
+				</tr>
+				<tr>
+					<td>3</td>
+					<td>Move left leg back or forward</td>
+				</tr>
+		</table>
+		<br>
+		<div class="col-xs-6">
+			<label>Transitions</label>
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>S\A</th>
+						<th>0</th>
+						<th>1</th>
+						<th>2</th>
+						<th>3</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let row of transitions; let i = index">
+						<td><b>{{i}}</b></td>
+						<td *ngFor="let col of row">{{col}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="col-xs-6">
+			<label>Rewards</label>
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>S\A</th>
+						<th>0</th>
+						<th>1</th>
+						<th>2</th>
+						<th>3</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let row of rewards; let i = index">
+						<td><b>{{i}}</b></td>
+						<td *ngFor="let col of row">{{col}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<hr>
+</div>
+<div class="col-sm-7">
+	<h2>Policies</h2>
+	<!--V-->
+	<label *ngIf="calculatingV">Calculating...</label>
+	<div *ngIf="!calculatingV" style="clear: both">
+		<b>Policy with V: </b>
+		<pre>{{policyV}}</pre>
+		<div *ngIf="steps[1]" class="animation">
+			<div>
+				<b>Animation:</b>
+			</div>
+			<div class="col-xs-4">
+				<label *ngIf="current_steps[1] == -1" class="end">END</label>
+				<img *ngIf="current_steps[1] > -1" src="img/step{{steps[1][current_steps[1]]}}.png" height="200">
+			</div>
+			<div class="col-xs-4">
+				<b>Steps</b>
+				<br>
+				<span *ngFor="let step of steps[1]; let i = index; let last = last">
+					<span [ngClass]="{text_bold: i == current_steps[1]}">{{step}}</span><span *ngIf="!last">, </span>
+				</span>
+			</div>
+			<div class="col-xs-4">
+				<button class="btn" [disabled]="playing[1] || current_steps[1] <= 0" (click)="step_forward(1, -1)">
+					<i class="glyphicon glyphicon-step-backward"></i>
+				</button>
+				<button *ngIf="playing[1]" class="btn">
+					<i class="glyphicon glyphicon-pause" (click)="pause_animation(1)"></i>
+				</button>
+				<button *ngIf="!playing[1]" class="btn">
+					<i class="glyphicon glyphicon-play" (click)="play_animation(1)"></i>
+				</button>
+				<button class="btn" [disabled]="playing[1]" (click)="step_forward(1, 1)">
+					<i class="glyphicon glyphicon-step-forward"></i>
+				</button>
+				<br>
+				<button class="btn btn_reset" (click)="reset_animation(1)">
+					<i class="glyphicon glyphicon-repeat"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+	<br>
+	<br>
+	<!--Q-->
+	<label *ngIf="calculatingQ">Calculating...</label>
+	<div *ngIf="!calculatingQ" style="clear: both">
+		<b>Policy with Q: </b>
+		<pre>{{policyQ}}</pre>
+		<div *ngIf="steps[2]" class="animation">
+			<div>
+				<b>Animation:</b>
+			</div>
+			<div class="col-xs-4">
+				<label *ngIf="current_steps[2] == -1" class="end">END</label>
+				<img *ngIf="current_steps[2] > -1" src="img/step{{steps[2][current_steps[2]]}}.png" height="200">
+			</div>
+			<div class="col-xs-4">
+				<b>Steps</b>
+				<br>
+				<span *ngFor="let step of steps[2]; let i = index; let last = last">
+					<span [ngClass]="{text_bold: i == current_steps[2]}">{{step}}</span><span *ngIf="!last">, </span>
+				</span>
+			</div>
+			<div class="col-xs-4">
+				<button class="btn" [disabled]="playing[2] || current_steps[2] <= 0" (click)="step_forward(2, -1)">
+					<i class="glyphicon glyphicon-step-backward"></i>
+				</button>
+				<button *ngIf="playing[2]" class="btn">
+					<i class="glyphicon glyphicon-pause" (click)="pause_animation(2)"></i>
+				</button>
+				<button *ngIf="!playing[2]" class="btn">
+					<i class="glyphicon glyphicon-play" (click)="play_animation(2)"></i>
+				</button>
+				<button class="btn" [disabled]="playing[2]" (click)="step_forward(2, 1)">
+					<i class="glyphicon glyphicon-step-forward"></i>
+				</button>
+				<br>
+				<button class="btn btn_reset" (click)="reset_animation(2)">
+					<i class="glyphicon glyphicon-repeat"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+	<br>
+	<br>
+	<!--Q learning-->
+	<label *ngIf="calculatingQlearning">Calculating...</label>
+	<div *ngIf="!calculatingQlearning" style="clear: both">
+		<b>Policy with Q-learning: </b>
+		<pre>{{policyQlearning}}</pre>
+		<div *ngIf="steps[3]" class="animation">
+			<div>
+				<b>Animation:</b>
+			</div>
+			<div class="col-xs-4">
+				<label *ngIf="current_steps[3] == -1" class="end">END</label>
+				<img *ngIf="current_steps[3] > -1" src="img/step{{steps[3][current_steps[3]]}}.png" height="200">
+			</div>
+			<div class="col-xs-4">
+				<b>Steps</b>
+				<br>
+				<span *ngFor="let step of steps[3]; let i = index; let last = last">
+					<span [ngClass]="{text_bold: i == current_steps[3]}">{{step}}</span><span *ngIf="!last">, </span>
+				</span>
+			</div>
+			<div class="col-xs-4">
+				<button class="btn" [disabled]="playing[3] || current_steps[3] <= 0" (click)="step_forward(3, -1)">
+					<i class="glyphicon glyphicon-step-backward"></i>
+				</button>
+				<button *ngIf="playing[3]" class="btn">
+					<i class="glyphicon glyphicon-pause" (click)="pause_animation(3)"></i>
+				</button>
+				<button *ngIf="!playing[3]" class="btn">
+					<i class="glyphicon glyphicon-play" (click)="play_animation(3)"></i>
+				</button>
+				<button class="btn" [disabled]="playing[3]" (click)="step_forward(3, 1)">
+					<i class="glyphicon glyphicon-step-forward"></i>
+				</button>
+				<br>
+				<button class="btn btn_reset" (click)="reset_animation(3)">
+					<i class="glyphicon glyphicon-repeat"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+	<br>
+	<br>
+	<!--Q learning greedy-->
+	<label *ngIf="calculatingQlearning_greedy">Calculating...</label>
+	<div *ngIf="!calculatingQlearning_greedy" style="clear: both">
+		<b>Policy with Q-learning (greedy): </b>
+		<pre>{{policyQlearning_greedy}}</pre>
+		<div *ngIf="steps[4]" class="animation">
+			<div>
+				<b>Animation:</b>
+			</div>
+			<div class="col-xs-4">
+				<label *ngIf="current_steps[4] == -1" class="end">END</label>
+				<img *ngIf="current_steps[4] > -1" src="img/step{{steps[4][current_steps[4]]}}.png" height="200">
+			</div>
+			<div class="col-xs-4">
+				<b>Steps</b>
+				<br>
+				<span *ngFor="let step of steps[4]; let i = index; let last = last">
+					<span [ngClass]="{text_bold: i == current_steps[4]}">{{step}}</span><span *ngIf="!last">, </span>
+				</span>
+			</div>
+			<div class="col-xs-4">
+				<button class="btn" [disabled]="playing[4] || current_steps[4] <= 0" (click)="step_forward(4, -1)">
+					<i class="glyphicon glyphicon-step-backward"></i>
+				</button>
+				<button *ngIf="playing[4]" class="btn">
+					<i class="glyphicon glyphicon-pause" (click)="pause_animation(4)"></i>
+				</button>
+				<button *ngIf="!playing[4]" class="btn">
+					<i class="glyphicon glyphicon-play" (click)="play_animation(4)"></i>
+				</button>
+				<button class="btn" [disabled]="playing[4]" (click)="step_forward(4, 1)">
+					<i class="glyphicon glyphicon-step-forward"></i>
+				</button>
+				<br>
+				<button class="btn btn_reset" (click)="reset_animation(4)">
+					<i class="glyphicon glyphicon-repeat"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+	<br>
+	<br>
+</div>
