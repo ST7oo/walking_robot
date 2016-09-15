@@ -4,8 +4,8 @@ var router = express.Router();
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.json({
-    name: "John",
-    last: "Smith"
+    name: "name",
+    last: "lastname"
   });
 });
 

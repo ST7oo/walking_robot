@@ -1,6 +1,6 @@
 # Walking Robot
 
-Reinforcement learning
+[Live demo](https://walkingrobot.herokuapp.com/)
 
 ## Install
 ```bash

@@ -1,21 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-// import { Http } from "@angular/http";
-// import 'rxjs/add/operator/map';
 import * as math from 'mathjs';
 
 
 @Component({
     selector: 'my-home',
-    templateUrl: 'components/home/home.component.html',
-    // styleUrls: ['components/home/home.component.css']
+    templateUrl: 'components/home/home.component.html'
 })
 export class HomeComponent implements OnInit {
-
-    // constructor(http: Http) {
-    //     http.get("/users")
-    //         .map(data => data.json())
-    //         .subscribe((data) => this.users = data);
-    // }
 
 	num_policies = 5;
 	num_states = 16;
