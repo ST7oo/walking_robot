@@ -41,3 +41,13 @@ th {
 	clear: both;
 	margin-bottom: 40px;
 }
+
+.table_policy {
+	padding: 0 20px;
+}
+.table_policy table {
+	font-size: 0.9em;
+}
+.table_policy td,th {
+	padding: 3px 8px !important;
+}

@@ -22,6 +22,7 @@ export class HomeComponent implements OnInit {
 		[4, 5, 6, 7],
 		[8, 9, 10, 11],
 		[12, 13, 14, 15]];
+	range_states: number[] = Array.from(Array(this.num_states), (_, i) => i + 1);
 	// matrix of transitions
   transitions = [[1, 3, 4, 12], //0
     [0, 2, 5, 13], //1
