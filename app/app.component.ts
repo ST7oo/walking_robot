@@ -4,12 +4,6 @@ import { ROUTER_DIRECTIVES } from '@angular/router';
 @Component({
     directives: [ROUTER_DIRECTIVES],
     selector: 'my-app',
-    styles: [`h1 {
-	color: white;
-	background: darkgray;
-	padding: 20px;
-}
-`],
     template: `
 <h1>Walking Robot</h1>
 <a [routerLink]="['/']">Home</a> | <a [routerLink]="['/about/', { id: 2 }]">About</a>
