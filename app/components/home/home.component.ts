@@ -12,17 +12,17 @@ export class HomeComponent implements OnInit {
 
 	policies_names = ['V', 'Q', 'Qlearning', 'Qlearning_greedy']; // policies to calculate
 	// default parameters for policies 
-  discount_factor: number = 0.5;
-	learning_rate: number = 0.1;
-	exploration_rate: number = 0.2;
-	T = 10000; // iterations for Q learning
+  discount_factor: number = 0.3;
+	learning_rate: number = 0.8;
+	exploration_rate: number = 0.6;
+	T = 5000; // iterations for Q learning
 	num_actions = 4; // number of possible actions
 	num_states = 16; // number of possible states
 	states = [[0, 1, 2, 3],
 		[4, 5, 6, 7],
 		[8, 9, 10, 11],
 		[12, 13, 14, 15]];
-	range_states: number[] = Array.from(Array(this.num_states), (_, i) => i + 1);
+	range_states: number[] = Array.from(Array(this.num_states), (_, i) => i);
 	// matrix of transitions
   transitions = [[1, 3, 4, 12], //0
     [0, 2, 5, 13], //1
@@ -64,14 +64,14 @@ export class HomeComponent implements OnInit {
 	speed = 800; // speed of animation
 	max_iterations = 200; // max iterations for V and Q
 	random_max = 10; // max number for random initialization
-	iterations_V: number; // number of iterations for V
-	iterations_Q: number; // number of iterations for Q
   policies: number[][] = Array(this.policies_names.length); // policies
+	iterations: number[] = Array(this.policies_names.length); // number of iterations taken to find the policy
   steps: Array<number>[] = Array(this.policies_names.length); // steps of animations
 	animations: any[] = Array(this.policies_names.length); // JS intervals for animations
 	current_steps: number[] = Array(this.policies_names.length); // current step of each animation
 	playing: boolean[] = Array(this.policies_names.length); // if the animations are playing
-	// best_policy = [0, 1, 0, 2, 3, 2, 0, 1, 2, 2, 0, 1, 0, 3, 3, 0]; // policy for testing
+	best_policy = [0, 1, 0, 2, 3, 0, 0, 1, 2, 2, 0, 1, 0, 1, 3, 0]; // policy for testing convergence
+	optional_index = [0, 5, 6, 10, 13, 15]; // states where the best policy can change the action for action+2
 
 	/* -- VARIABLES -- */
 
@@ -84,6 +84,7 @@ export class HomeComponent implements OnInit {
 			this.playing[p] = false;
 		}
     this.calculate_policies();
+		// this.test_exploration_rate();
   }
 
 	// Policies
@@ -95,11 +96,13 @@ export class HomeComponent implements OnInit {
 			this.reset_animation(p);
 		}
 		this.steps = Array(this.policies_names.length);
-		[this.policies['V'], this.iterations_V] = this.calculate_policyV(this.transitions, this.rewards, this.discount_factor, this.num_states, this.num_actions, this.max_iterations);
-		[this.policies['Q'], this.iterations_Q] = this.calculate_policyQ(this.transitions, this.rewards, this.discount_factor, this.num_states, this.num_actions, this.max_iterations, this.random_max);
-		this.policies['Qlearning'] = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, this.num_states, this.num_actions, this.random_max);
-		this.policies['Qlearning_greedy'] = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, this.num_states, this.num_actions, this.random_max, true);
-		this.calculating = false;
+		setTimeout(() => {
+			[this.policies['V'], this.iterations['V']] = this.calculate_policyV(this.transitions, this.rewards, this.discount_factor, this.num_states, this.num_actions, this.max_iterations);
+			[this.policies['Q'], this.iterations['Q']] = this.calculate_policyQ(this.transitions, this.rewards, this.discount_factor, this.num_states, this.num_actions, this.max_iterations, this.random_max);
+			[this.policies['Qlearning'], this.iterations['Qlearning']] = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, this.num_states, this.num_actions, this.random_max, false, this.best_policy, this.optional_index);
+			[this.policies['Qlearning_greedy'], this.iterations['Qlearning_greedy']] = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, this.exploration_rate, this.learning_rate, this.discount_factor, this.num_states, this.num_actions, this.random_max, true, this.best_policy, this.optional_index);
+			this.calculating = false;
+		}, 10);
 	}
 
 	// calculate policy using V
@@ -145,13 +148,14 @@ export class HomeComponent implements OnInit {
   }
 
 	// calculate policy using Q learning
-	calculate_Qlearning(initial_state: number, T: number, exploration_rate: number, learning_rate: number, discount_factor: number, num_states: number, num_actions: number, random_max: number, greedy = false) {
+	calculate_Qlearning(initial_state: number, T: number, exploration_rate: number, learning_rate: number, discount_factor: number, num_states: number, num_actions: number, random_max: number, greedy = false, best_policy?: number[], optional_index?: number[]) {
 		let action: number, new_state: number, reward: number;
 		let policy = Array(num_states);
 		let epsilon = exploration_rate;
 		let Q = math.randomInt([num_states, num_actions], random_max);
 		let state = initial_state;
-		for (let t = 0; t < T; t++) {
+		let t = 1;
+		while (t < T) {
 			if (!greedy && math.random() < epsilon) {
 				action = math.randomInt(num_actions - 1);
 			} else {
@@ -161,11 +165,57 @@ export class HomeComponent implements OnInit {
 			[new_state, reward] = this.go(state, action);
 			Q[state][action] = Q[state][action] + learning_rate * (reward + discount_factor * math.max(Q[new_state]) - Q[state][action]);
 			state = new_state;
+			if (best_policy && optional_index && this.converge_policy(Q, best_policy, optional_index, num_states)) {
+				break;
+			}
+			t++;
 		}
 		for (let s in Q) {
 			policy[s] = this.argmax(Q[s], (a: number) => Q[s][a]);
 		}
-		return policy;
+		return [policy, t];
+	}
+
+	// check if a policy has converged to an optimal policy
+	converge_policy(Q: any, best_policy: number[], optional_index: number[], num_states: number) {
+		let policy = Array(num_states);
+		let converged = true;
+		for (let s in Q) {
+			policy[s] = this.argmax(Q[s], (a: number) => Q[s][a]);
+		}
+		for (let i in best_policy) {
+			if (optional_index.indexOf(parseInt(i)) == -1) {
+				if (policy[i] != best_policy[i]) {
+					converged = false;
+					break;
+				}
+			} else {
+				if (policy[i] != best_policy[i] && policy[i] != best_policy[i] + 2) {
+					converged = false;
+					break;
+				}
+			}
+		}
+		return converged;
+	}
+
+	// function to test the exploration rate (it prints in the browser console)
+	test_exploration_rate(num_tests = 50) {
+		for (let eps = 0.1; eps <= 0.9; eps += 0.1) {
+			console.log(eps);
+			let epsilon = 0;
+			let conv = num_tests;
+			for (let i = 0; i < num_tests; i++) {
+				let p, iter;
+				[p, iter] = this.calculate_Qlearning(math.randomInt(this.num_states - 1), this.T, eps, this.learning_rate, this.discount_factor, this.num_states, this.num_actions, this.random_max, false, this.best_policy, this.optional_index);
+				if (iter < this.T){
+					epsilon += iter;
+				} else {
+					conv--;
+				}
+			}
+			console.log(epsilon / conv, conv / num_tests);
+		}
 	}
 
 	// get the new state and reward after performing an action in the current state

@@ -68,10 +68,18 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-5">
-				<label>Iterations Q-learning</label>
+				<label>Max iterations Q-learning</label>
 			</div>
 			<div class="col-xs-5">
 				<input type="number" class="form-control" min="1" [(ngModel)]="T">
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-5">
+				<label>Max iterations V and Q</label>
+			</div>
+			<div class="col-xs-5">
+				<input type="number" class="form-control" min="1" [(ngModel)]="max_iterations">
 			</div>
 		</div>
 		<div class="row btn_parameters">
@@ -82,9 +90,10 @@
 		<br>
 		<div class="panel panel-default">
 			<div class="panel-body">
-				Iterations with V: {{iterations_V}}<br> Iterations with Q: {{iterations_Q}}<br>
+				<span *ngFor="let p of policies_names">Iterations with {{p}}: {{iterations[p]}}<br></span>
 			</div>
 		</div>
+		<!--<button class="btn btn-default" (click)="test_exploration_rate()">Test exploration rate</button>-->
 	</div>
 	<hr>
 	<h3><a style="cursor: pointer" (click)="toggle_parameters(2)"><i class="glyphicon" [ngClass]="{'glyphicon-collapse-down': !show_parameters[2], 'glyphicon-collapse-up': show_parameters[2]}"></i> Task data</a></h3>
