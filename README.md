@@ -15,7 +15,7 @@ npm install && npm run typings
 ```bash
 npm start
 ```
-  - Applciation url: http://localhost:3000
+  - Application url: http://localhost:3000
 
 
 ## Development
